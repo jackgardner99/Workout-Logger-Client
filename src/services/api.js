@@ -4,7 +4,7 @@ async function request(path, options = {}) {
   const token = localStorage.getItem('token')
   const headers = {
     'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
+    ...(token && { Authorization: `Token ${token}` }),
     ...options.headers,
   }
 
@@ -22,4 +22,6 @@ export const api = {
 
   register: (body) =>
     request('/api/auth/register/', { method: 'POST', body: JSON.stringify(body) }),
+
+  getLogs: () => request('/api/logs/'),
 }
