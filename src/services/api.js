@@ -24,4 +24,11 @@ export const api = {
     request('/api/auth/register/', { method: 'POST', body: JSON.stringify(body) }),
 
   getLogs: () => request('/api/logs/'),
+
+  createLog: (body) =>
+    request('/api/logs/', { method: 'POST', body: JSON.stringify(body) }),
+
+  getExercises: () => request('/api/exercises/'),
+
+  getIntensities: () => request('/api/intensity/'),
 }
