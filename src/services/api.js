@@ -38,6 +38,8 @@ export const api = {
 
   deleteLog: (id) => request(`/api/logs/${id}/`, { method: 'DELETE' }),
 
+  getCommunityLogs: () => request('/api/logs/community/'),
+
   getExercises: () => request('/api/exercises/'),
 
   getIntensities: () => request('/api/intensity/'),
