@@ -7,6 +7,7 @@ import MyLogs from './pages/MyLogs'
 import NewLog from './pages/NewLog'
 import LogDetail from './pages/LogDetail'
 import EditLog from './pages/EditLog'
+import Community from './pages/Community'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth()
@@ -23,6 +24,7 @@ export default function App() {
       <Route path="/logs/new" element={<ProtectedRoute><NewLog /></ProtectedRoute>} />
       <Route path="/logs/:id" element={<ProtectedRoute><LogDetail /></ProtectedRoute>} />
       <Route path="/logs/:id/edit" element={<ProtectedRoute><EditLog /></ProtectedRoute>} />
+      <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
