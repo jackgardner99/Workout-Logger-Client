@@ -25,8 +25,13 @@ export const api = {
 
   getLogs: () => request('/api/logs/'),
 
+  getLog: (id) => request(`/api/logs/${id}/`),
+
   createLog: (body) =>
     request('/api/logs/', { method: 'POST', body: JSON.stringify(body) }),
+
+  updateLog: (id, body) =>
+    request(`/api/logs/${id}/`, { method: 'PUT', body: JSON.stringify(body) }),
 
   getExercises: () => request('/api/exercises/'),
 
