@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import MyLogs from './pages/MyLogs'
+import NewLog from './pages/NewLog'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth()
@@ -17,6 +18,7 @@ export default function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/logs" element={<ProtectedRoute><MyLogs /></ProtectedRoute>} />
+      <Route path="/logs/new" element={<ProtectedRoute><NewLog /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
