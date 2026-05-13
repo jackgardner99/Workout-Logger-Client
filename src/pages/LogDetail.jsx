@@ -24,6 +24,20 @@ export default function LogDetail() {
   const [log, setLog] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    try {
+      await api.deleteLog(id)
+      navigate('/logs')
+    } catch {
+      setError('Failed to delete log.')
+      setConfirmDelete(false)
+      setDeleting(false)
+    }
+  }
 
   useEffect(() => {
     api.getLog(id)
@@ -47,12 +61,44 @@ export default function LogDetail() {
       <div className="max-w-xl">
         <div className="flex items-start justify-between mb-1">
           <h1 className="text-2xl font-semibold text-gray-900">{log.title}</h1>
-          <button
-            onClick={() => navigate(`/logs/${id}/edit`)}
-            className="shrink-0 ml-4 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
-          >
-            Edit
-          </button>
+          <div className="flex items-center gap-2 shrink-0 ml-4">
+            {confirmDelete ? (
+              <>
+                <span className="text-sm text-gray-500">Delete this log?</span>
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 transition"
+                >
+                  {deleting ? 'Deleting…' : 'Confirm'}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => navigate(`/logs/${id}/edit`)}
+                  className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="rounded-lg border border-gray-200 p-2 text-gray-400 hover:text-red-500 hover:border-red-200 transition"
+                  aria-label="Delete log"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-3 mt-2 mb-8">

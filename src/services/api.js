@@ -9,6 +9,9 @@ async function request(path, options = {}) {
   }
 
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers })
+
+  if (res.status === 204) return null
+
   const data = await res.json()
 
   if (!res.ok) throw data
@@ -32,6 +35,8 @@ export const api = {
 
   updateLog: (id, body) =>
     request(`/api/logs/${id}/`, { method: 'PUT', body: JSON.stringify(body) }),
+
+  deleteLog: (id) => request(`/api/logs/${id}/`, { method: 'DELETE' }),
 
   getExercises: () => request('/api/exercises/'),
 
