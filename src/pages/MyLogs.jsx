@@ -14,7 +14,8 @@ const CATEGORY_COLORS = {
 }
 
 function formatDate(dateStr) {
-  const date = new Date(dateStr)
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const date = new Date(year, month - 1, day)
   const today = new Date()
   const yesterday = new Date(today)
   yesterday.setDate(today.getDate() - 1)

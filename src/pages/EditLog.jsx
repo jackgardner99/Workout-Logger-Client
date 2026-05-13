@@ -1,24 +1,46 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import ExercisePicker from '../components/ExercisePicker'
 import { api } from '../services/api'
 
-const today = new Date().toISOString().split('T')[0]
-
-export default function NewLog() {
+export default function EditLog() {
+  const { id } = useParams()
   const navigate = useNavigate()
 
-  const [form, setForm] = useState({ title: '', workout_date: today, intensity_id: '', notes: '' })
+  const [form, setForm] = useState(null)
   const [intensities, setIntensities] = useState([])
   const [exercises, setExercises] = useState([])
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    api.getIntensities().then(setIntensities)
-  }, [])
+    Promise.all([api.getLog(id), api.getIntensities()])
+      .then(([log, intensityList]) => {
+        setForm({
+          title: log.title,
+          workout_date: log.workout_date,
+          intensity_id: log.intensity?.id ?? '',
+          notes: log.notes ?? '',
+        })
+        setExercises(
+          log.exercises.map((ex) => ({
+            exercise_id: ex.exercise_id,
+            exercise_name: ex.exercise_name,
+            category: ex.category,
+            sets: ex.sets,
+            reps: ex.reps,
+            weight_lbs: ex.weight_lbs,
+            notes: ex.notes ?? '',
+          }))
+        )
+        setIntensities(intensityList)
+      })
+      .catch(() => setError('Failed to load log.'))
+      .finally(() => setLoading(false))
+  }, [id])
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -37,7 +59,7 @@ export default function NewLog() {
     setError(null)
     setSubmitting(true)
     try {
-      await api.createLog({
+      await api.updateLog(id, {
         ...form,
         intensity_id: Number(form.intensity_id),
         exercises: exercises.map(({ exercise_id, sets, reps, weight_lbs, notes }) => ({
@@ -48,18 +70,26 @@ export default function NewLog() {
           notes,
         })),
       })
-      navigate('/logs')
+      navigate(`/logs/${id}`)
     } catch (err) {
-      setError(err?.detail ?? 'Failed to create log. Please try again.')
+      setError(err?.detail ?? 'Failed to save changes. Please try again.')
     } finally {
       setSubmitting(false)
     }
   }
 
+  if (loading) {
+    return <Layout><p className="text-sm text-gray-400">Loading…</p></Layout>
+  }
+
+  if (error && !form) {
+    return <Layout><p className="text-sm text-red-600">{error}</p></Layout>
+  }
+
   return (
     <Layout>
       <div className="max-w-xl">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-8">New log</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-8">Edit log</h1>
 
         {error && (
           <div className="mb-6 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
@@ -77,7 +107,6 @@ export default function NewLog() {
               value={form.title}
               onChange={handleChange}
               className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
-              placeholder="e.g. Monday Push Day"
             />
           </div>
 
@@ -118,7 +147,6 @@ export default function NewLog() {
               value={form.notes}
               onChange={handleChange}
               className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition resize-none"
-              placeholder="How did it go?"
             />
           </div>
 
@@ -162,13 +190,22 @@ export default function NewLog() {
             )}
           </div>
 
-          <button
-            type="submit"
-            disabled={submitting || exercises.length === 0}
-            className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
-          >
-            {submitting ? 'Saving…' : 'Save log'}
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => navigate(`/logs/${id}`)}
+              className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting || exercises.length === 0}
+              className="flex-1 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              {submitting ? 'Saving…' : 'Save changes'}
+            </button>
+          </div>
         </form>
       </div>
 
