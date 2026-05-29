@@ -40,6 +40,8 @@ export const api = {
 
   getCommunityLogs: () => request('/api/logs/community/'),
 
+  toggleLike: (id) => request(`/api/logs/${id}/like/`, { method: 'POST' }),
+
   getCategories: () => request('/api/categories/'),
 
   getExercises: () => request('/api/exercises/'),
