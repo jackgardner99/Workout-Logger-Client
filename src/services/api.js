@@ -42,6 +42,12 @@ export const api = {
 
   toggleLike: (id) => request(`/api/logs/${id}/like/`, { method: 'POST' }),
 
+  createComment: (id, body) =>
+    request(`/api/logs/${id}/comments/`, { method: 'POST', body: JSON.stringify({ body }) }),
+
+  deleteComment: (logId, commentId) =>
+    request(`/api/logs/${logId}/comments/${commentId}/`, { method: 'DELETE' }),
+
   getCategories: () => request('/api/categories/'),
 
   getExercises: () => request('/api/exercises/'),
