@@ -1,7 +1,7 @@
 const BASE_URL = import.meta.env.VITE_API_URL
 
 async function request(path, options = {}) {
-  const token = localStorage.getItem('token')
+  const token = sessionStorage.getItem('token')
   const headers = {
     'Content-Type': 'application/json',
     ...(token && { Authorization: `Token ${token}` }),

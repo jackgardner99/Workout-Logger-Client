@@ -4,9 +4,9 @@ import { api } from '../services/api'
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem('token'))
+  const [token, setToken] = useState(() => sessionStorage.getItem('token'))
   const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem('user')
+    const stored = sessionStorage.getItem('user')
     return stored ? JSON.parse(stored) : null
   })
 
@@ -17,16 +17,16 @@ export function AuthProvider({ children }) {
       first_name: data.first_name,
       username: data.username,
     }
-    localStorage.setItem('token', t)
-    localStorage.setItem('user', JSON.stringify(u))
+    sessionStorage.setItem('token', t)
+    sessionStorage.setItem('user', JSON.stringify(u))
     setToken(t)
     setUser(u)
     return data
   }
 
   const logout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    sessionStorage.removeItem('token')
+    sessionStorage.removeItem('user')
     setToken(null)
     setUser(null)
   }
