@@ -52,5 +52,10 @@ export const api = {
 
   getExercises: () => request('/api/exercises/'),
 
+  createExercise: (body) =>
+    request('/api/exercises/', { method: 'POST', body: JSON.stringify(body) }),
+
+  getMuscleGroups: () => request('/api/muscle-groups/'),
+
   getIntensities: () => request('/api/intensity/'),
 }

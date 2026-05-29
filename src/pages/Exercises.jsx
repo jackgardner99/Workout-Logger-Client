@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { api } from '../services/api'
 
@@ -11,6 +12,7 @@ const CATEGORY_COLORS = {
 }
 
 export default function Exercises() {
+  const navigate = useNavigate()
   const [exercises, setExercises] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -29,8 +31,11 @@ export default function Exercises() {
     return ['All', ...names]
   }, [exercises])
 
+  const DIFFICULTY_ORDER = ['Beginner', 'Intermediate', 'Advanced']
+
   const difficulties = useMemo(() => {
-    return [...new Set(exercises.map((ex) => ex.difficulty).filter(Boolean))].sort()
+    const present = new Set(exercises.map((ex) => ex.difficulty).filter(Boolean))
+    return DIFFICULTY_ORDER.filter((d) => present.has(d))
   }, [exercises])
 
   const muscleGroups = useMemo(() => {
@@ -69,7 +74,15 @@ export default function Exercises() {
 
   return (
     <Layout>
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Exercises</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">Exercises</h1>
+        <button
+          onClick={() => navigate('/exercises/new')}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
+        >
+          + Add exercise
+        </button>
+      </div>
 
       <div className="flex gap-8 items-start">
         {/* Sidebar */}
