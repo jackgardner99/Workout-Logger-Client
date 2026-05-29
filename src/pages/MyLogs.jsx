@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { api } from '../services/api'
 
-const CATEGORIES = ['All', 'Push', 'Pull', 'Legs', 'Core', 'Cardio']
-
 const CATEGORY_COLORS = {
   Push: 'bg-blue-100 text-blue-700',
   Pull: 'bg-purple-100 text-purple-700',
@@ -28,13 +26,17 @@ function formatDate(dateStr) {
 export default function MyLogs() {
   const navigate = useNavigate()
   const [logs, setLogs] = useState([])
+  const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [activeCategory, setActiveCategory] = useState('All')
 
   useEffect(() => {
-    api.getLogs()
-      .then(setLogs)
+    Promise.all([api.getLogs(), api.getCategories()])
+      .then(([logList, categoryList]) => {
+        setLogs(logList)
+        setCategories(categoryList)
+      })
       .catch(() => setError('Failed to load logs.'))
       .finally(() => setLoading(false))
   }, [])
@@ -42,9 +44,7 @@ export default function MyLogs() {
   const filtered =
     activeCategory === 'All'
       ? logs
-      : logs.filter((log) =>
-          log.exercises?.some((ex) => ex.category?.name === activeCategory)
-        )
+      : logs.filter((log) => log.category?.name === activeCategory)
 
   return (
     <Layout>
@@ -58,8 +58,8 @@ export default function MyLogs() {
         </button>
       </div>
 
-      <div className="flex gap-2 mb-6">
-        {CATEGORIES.map((cat) => (
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {['All', ...categories.map((c) => c.name)].map((cat) => (
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
@@ -106,17 +106,14 @@ export default function MyLogs() {
                         <span>{log.exercises.length} exercise{log.exercises.length !== 1 ? 's' : ''}</span>
                       </>
                     )}
-                    {(() => {
-                      const cat = log.exercises?.[0]?.category?.name
-                      return cat ? (
-                        <>
-                          <span>·</span>
-                          <span className={`font-medium px-2 py-0.5 rounded-full ${CATEGORY_COLORS[cat] ?? 'bg-gray-100 text-gray-600'}`}>
-                            {cat}
-                          </span>
-                        </>
-                      ) : null
-                    })()}
+                    {log.category?.name && (
+                      <>
+                        <span>·</span>
+                        <span className={`font-medium px-2 py-0.5 rounded-full ${CATEGORY_COLORS[log.category.name] ?? 'bg-gray-100 text-gray-600'}`}>
+                          {log.category.name}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
                 <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

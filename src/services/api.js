@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8000'
+const BASE_URL = 'https://workout-logger-api-production.up.railway.app'
 
 async function request(path, options = {}) {
   const token = localStorage.getItem('token')
@@ -40,7 +40,28 @@ export const api = {
 
   getCommunityLogs: () => request('/api/logs/community/'),
 
+  toggleLike: (id) => request(`/api/logs/${id}/like/`, { method: 'POST' }),
+
+  createComment: (id, body) =>
+    request(`/api/logs/${id}/comments/`, { method: 'POST', body: JSON.stringify({ body }) }),
+
+  deleteComment: (logId, commentId) =>
+    request(`/api/logs/${logId}/comments/${commentId}/`, { method: 'DELETE' }),
+
+  getCategories: () => request('/api/categories/'),
+
   getExercises: () => request('/api/exercises/'),
+
+  createExercise: (body) =>
+    request('/api/exercises/', { method: 'POST', body: JSON.stringify(body) }),
+
+  updateExercise: (id, body) =>
+    request(`/api/exercises/${id}/`, { method: 'PUT', body: JSON.stringify(body) }),
+
+  deleteExercise: (id) =>
+    request(`/api/exercises/${id}/`, { method: 'DELETE' }),
+
+  getMuscleGroups: () => request('/api/muscle-groups/'),
 
   getIntensities: () => request('/api/intensity/'),
 }

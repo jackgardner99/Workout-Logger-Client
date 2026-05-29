@@ -8,6 +8,9 @@ import NewLog from './pages/NewLog'
 import LogDetail from './pages/LogDetail'
 import EditLog from './pages/EditLog'
 import Community from './pages/Community'
+import Exercises from './pages/Exercises'
+import CreateExercise from './pages/CreateExercise'
+import EditExercise from './pages/EditExercise'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth()
@@ -24,6 +27,9 @@ export default function App() {
       <Route path="/logs/new" element={<ProtectedRoute><NewLog /></ProtectedRoute>} />
       <Route path="/logs/:id" element={<ProtectedRoute><LogDetail /></ProtectedRoute>} />
       <Route path="/logs/:id/edit" element={<ProtectedRoute><EditLog /></ProtectedRoute>} />
+      <Route path="/exercises" element={<ProtectedRoute><Exercises /></ProtectedRoute>} />
+      <Route path="/exercises/new" element={<ProtectedRoute><CreateExercise /></ProtectedRoute>} />
+      <Route path="/exercises/:id/edit" element={<ProtectedRoute><EditExercise /></ProtectedRoute>} />
       <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

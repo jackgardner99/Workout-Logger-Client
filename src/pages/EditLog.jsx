@@ -10,6 +10,7 @@ export default function EditLog() {
 
   const [form, setForm] = useState(null)
   const [intensities, setIntensities] = useState([])
+  const [categories, setCategories] = useState([])
   const [exercises, setExercises] = useState([])
   const [pickerOpen, setPickerOpen] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -17,12 +18,13 @@ export default function EditLog() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    Promise.all([api.getLog(id), api.getIntensities()])
-      .then(([log, intensityList]) => {
+    Promise.all([api.getLog(id), api.getIntensities(), api.getCategories()])
+      .then(([log, intensityList, categoryList]) => {
         setForm({
           title: log.title,
           workout_date: log.workout_date,
           intensity_id: log.intensity?.id ?? '',
+          category_id: log.category?.id ?? '',
           notes: log.notes ?? '',
         })
         setExercises(
@@ -37,6 +39,7 @@ export default function EditLog() {
           }))
         )
         setIntensities(intensityList)
+        setCategories(categoryList)
       })
       .catch(() => setError('Failed to load log.'))
       .finally(() => setLoading(false))
@@ -62,6 +65,7 @@ export default function EditLog() {
       await api.updateLog(id, {
         ...form,
         intensity_id: Number(form.intensity_id),
+        category_id: form.category_id ? Number(form.category_id) : null,
         exercises: exercises.map(({ exercise_id, sets, reps, weight_lbs, notes }) => ({
           exercise_id,
           sets,
@@ -134,6 +138,20 @@ export default function EditLog() {
                 <option value="">Select…</option>
                 {intensities.map((i) => (
                   <option key={i.id} value={i.id}>{i.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
+              <select
+                name="category_id"
+                value={form.category_id}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white"
+              >
+                <option value="">None</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
             </div>
