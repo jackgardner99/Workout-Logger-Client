@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { useAuth } from '../context/AuthContext'
 import { api } from '../services/api'
 
 const CATEGORY_COLORS = {
@@ -13,8 +14,11 @@ const CATEGORY_COLORS = {
 
 export default function Exercises() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [exercises, setExercises] = useState([])
   const [loading, setLoading] = useState(true)
+  const [expandedId, setExpandedId] = useState(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState('All')
   const [activeDifficulty, setActiveDifficulty] = useState('')
@@ -71,6 +75,13 @@ export default function Exercises() {
 
   const hasActiveFilters =
     search || activeCategory !== 'All' || activeDifficulty || activeMuscleGroups.length > 0
+
+  const handleDelete = async (id) => {
+    await api.deleteExercise(id)
+    setExercises((prev) => prev.filter((ex) => ex.id !== id))
+    setExpandedId(null)
+    setConfirmDeleteId(null)
+  }
 
   return (
     <Layout>
@@ -192,34 +203,89 @@ export default function Exercises() {
 
           {!loading && filtered.length > 0 && (
             <ul className="divide-y divide-gray-100">
-              {filtered.map((ex) => (
-                <li key={ex.id} className="py-4 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">{ex.name}</p>
-                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                      {ex.category?.name && (
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${CATEGORY_COLORS[ex.category.name] ?? 'bg-gray-100 text-gray-600'}`}>
-                          {ex.category.name}
-                        </span>
+              {filtered.map((ex) => {
+                const isOwner = ex.created_by?.username === user?.username
+                const isExpanded = expandedId === ex.id
+                const isConfirmingDelete = confirmDeleteId === ex.id
+                return (
+                  <li key={ex.id} className="py-4">
+                    <button
+                      onClick={() => isOwner && setExpandedId(isExpanded ? null : ex.id)}
+                      className={`w-full text-left flex items-start justify-between gap-4 ${isOwner ? 'cursor-pointer' : 'cursor-default'}`}
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">{ex.name}</p>
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          {ex.category?.name && (
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${CATEGORY_COLORS[ex.category.name] ?? 'bg-gray-100 text-gray-600'}`}>
+                              {ex.category.name}
+                            </span>
+                          )}
+                          {ex.difficulty && (
+                            <span className="text-xs text-gray-500">{ex.difficulty}</span>
+                          )}
+                          {ex.muscle_groups?.length > 0 && (
+                            <>
+                              <span className="text-gray-300">·</span>
+                              <span className="text-xs text-gray-500">
+                                {ex.muscle_groups.map((m) => m.name).join(', ')}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        {ex.description && (
+                          <p className="text-xs text-gray-400 mt-1.5 line-clamp-2">{ex.description}</p>
+                        )}
+                      </div>
+                      {isOwner && (
+                        <svg
+                          className={`w-4 h-4 text-gray-400 shrink-0 mt-0.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
                       )}
-                      {ex.difficulty && (
-                        <span className="text-xs text-gray-500">{ex.difficulty}</span>
-                      )}
-                      {ex.muscle_groups?.length > 0 && (
-                        <>
-                          <span className="text-gray-300">·</span>
-                          <span className="text-xs text-gray-500">
-                            {ex.muscle_groups.map((m) => m.name).join(', ')}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    {ex.description && (
-                      <p className="text-xs text-gray-400 mt-1.5 line-clamp-2">{ex.description}</p>
+                    </button>
+
+                    {isOwner && isExpanded && (
+                      <div className="mt-3 flex items-center gap-3">
+                        {isConfirmingDelete ? (
+                          <>
+                            <span className="text-sm text-gray-600">Delete this exercise?</span>
+                            <button
+                              onClick={() => handleDelete(ex.id)}
+                              className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
+                            >
+                              Yes, delete
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              className="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => navigate(`/exercises/${ex.id}/edit`)}
+                              className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteId(ex.id)}
+                              className="text-sm font-medium text-red-500 hover:text-red-600 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
+                      </div>
                     )}
-                  </div>
-                </li>
-              ))}
+                  </li>
+                )
+              })}
             </ul>
           )}
         </div>
