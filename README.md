@@ -1,16 +1,92 @@
-# React + Vite
+# Workout Logger Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The React frontend for the Workout Logger application.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **React 19**
+- **Vite** — build tool and dev server
+- **Tailwind CSS 4** — utility-first styling
+- **React Router DOM 7** — client-side routing
 
-## React Compiler
+## Project Structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```
+src/
+├── components/
+│   ├── Layout.jsx          # App shell with nav and header
+│   ├── ExercisePicker.jsx  # Modal for adding exercises to a log
+│   └── ExerciseBrowser.jsx # Searchable, filterable exercise list (used inside picker)
+├── context/
+│   └── AuthContext.jsx     # Auth state, login/logout, token storage
+├── pages/
+│   ├── Login.jsx
+│   ├── Register.jsx
+│   ├── Dashboard.jsx       # Stats (streak, weekly count, total) + recent logs
+│   ├── MyLogs.jsx          # User's log list with category filter
+│   ├── NewLog.jsx          # Create a workout log
+│   ├── EditLog.jsx         # Edit an existing log
+│   ├── LogDetail.jsx       # View a single log
+│   ├── Exercises.jsx       # Full exercise browser with sidebar filters
+│   ├── CreateExercise.jsx  # Create a new exercise
+│   ├── EditExercise.jsx    # Edit an exercise you own
+│   └── Community.jsx       # Community feed with likes and comments
+└── services/
+    └── api.js              # Centralised fetch wrapper and API methods
+```
 
-## Expanding the ESLint configuration
+## Setup
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Start the development server
+
+```bash
+npm run dev
+```
+
+The app will be available at `http://localhost:5173`.
+
+> The client expects the API to be running at `http://localhost:8000`. See the [API README](../Workout-Logger-API/README.md) for setup instructions.
+
+## Pages & Features
+
+### Dashboard
+Displays a personalised greeting, three stat cards (this week's logs, total logs, current streak), and the 5 most recent logs.
+
+### My Logs
+Lists all of the user's workout logs with category filter pills. Each log links to its detail page.
+
+### New Log / Edit Log
+Form for creating or editing a workout log. Fields include title, date, intensity, category, notes, and an exercise picker modal that supports search and category filtering.
+
+### Log Detail
+Read-only view of a single log with all exercises, sets, reps, and weight.
+
+### Exercises
+Full-page exercise browser with a sidebar containing:
+- Text search
+- Category filter (vertical pill list)
+- Difficulty filter (radio group — Beginner → Intermediate → Advanced)
+- Muscle group filter (multi-select checkboxes)
+
+Exercises you created show a chevron and expand to reveal **Edit** and **Delete** actions. Delete requires inline confirmation before removing the exercise.
+
+### Create Exercise / Edit Exercise
+Form for creating or editing an exercise. Fields include name, category, difficulty, description, and muscle group checkboxes.
+
+### Community
+Community feed showing all users' workout logs. Each card can be expanded to view exercises. Features:
+- **Likes** — toggle with instant optimistic UI update
+- **Comments** — post a comment on any log; delete your own comments
+- **Category filter** — filter the feed by workout category
+
+## API Integration
+
+All API calls go through `src/services/api.js`, which handles token injection from `localStorage` and throws on non-2xx responses. The base URL defaults to `http://localhost:8000`.
+
+Authentication tokens are stored in `localStorage` and managed through `AuthContext`.
