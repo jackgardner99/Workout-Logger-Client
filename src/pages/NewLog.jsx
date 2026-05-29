@@ -9,15 +9,19 @@ const today = new Date().toISOString().split('T')[0]
 export default function NewLog() {
   const navigate = useNavigate()
 
-  const [form, setForm] = useState({ title: '', workout_date: today, intensity_id: '', notes: '' })
+  const [form, setForm] = useState({ title: '', workout_date: today, intensity_id: '', category_id: '', notes: '' })
   const [intensities, setIntensities] = useState([])
+  const [categories, setCategories] = useState([])
   const [exercises, setExercises] = useState([])
   const [pickerOpen, setPickerOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    api.getIntensities().then(setIntensities)
+    Promise.all([api.getIntensities(), api.getCategories()]).then(([intensityList, categoryList]) => {
+      setIntensities(intensityList)
+      setCategories(categoryList)
+    })
   }, [])
 
   const handleChange = (e) => {
@@ -40,6 +44,7 @@ export default function NewLog() {
       await api.createLog({
         ...form,
         intensity_id: Number(form.intensity_id),
+        category_id: form.category_id ? Number(form.category_id) : null,
         exercises: exercises.map(({ exercise_id, sets, reps, weight_lbs, notes }) => ({
           exercise_id,
           sets,
@@ -105,6 +110,20 @@ export default function NewLog() {
                 <option value="">Select…</option>
                 {intensities.map((i) => (
                   <option key={i.id} value={i.id}>{i.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
+              <select
+                name="category_id"
+                value={form.category_id}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-white"
+              >
+                <option value="">None</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
             </div>

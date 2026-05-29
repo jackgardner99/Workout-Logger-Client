@@ -40,6 +40,8 @@ export const api = {
 
   getCommunityLogs: () => request('/api/logs/community/'),
 
+  getCategories: () => request('/api/categories/'),
+
   getExercises: () => request('/api/exercises/'),
 
   getIntensities: () => request('/api/intensity/'),
