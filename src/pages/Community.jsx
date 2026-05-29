@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Layout from '../components/Layout'
+import { useAuth } from '../context/AuthContext'
 import { api } from '../services/api'
 
 const CATEGORY_COLORS = {
@@ -34,11 +35,21 @@ function HeartIcon({ filled }) {
   )
 }
 
-function CommunityLogCard({ log, onToggleLike }) {
+function formatDateTime(isoString) {
+  const date = new Date(isoString)
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) +
+    ' at ' + date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+}
+
+function CommunityLogCard({ log, onToggleLike, currentUsername }) {
   const [expanded, setExpanded] = useState(false)
   const [liked, setLiked] = useState(log.liked_by_me)
   const [likeCount, setLikeCount] = useState(log.like_count)
   const [liking, setLiking] = useState(false)
+  const [comments, setComments] = useState(log.comments ?? [])
+  const [commentBody, setCommentBody] = useState('')
+  const [submittingComment, setSubmittingComment] = useState(false)
+  const commentInputRef = useRef(null)
 
   const handleLike = async (e) => {
     e.stopPropagation()
@@ -57,6 +68,25 @@ function CommunityLogCard({ log, onToggleLike }) {
     } finally {
       setLiking(false)
     }
+  }
+
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault()
+    const body = commentBody.trim()
+    if (!body || submittingComment) return
+    setSubmittingComment(true)
+    try {
+      const newComment = await api.createComment(log.id, body)
+      setComments((prev) => [...prev, newComment])
+      setCommentBody('')
+    } finally {
+      setSubmittingComment(false)
+    }
+  }
+
+  const handleDeleteComment = async (commentId) => {
+    await api.deleteComment(log.id, commentId)
+    setComments((prev) => prev.filter((c) => c.id !== commentId))
   }
 
   return (
@@ -116,37 +146,87 @@ function CommunityLogCard({ log, onToggleLike }) {
         </div>
       </button>
 
-      {expanded && log.exercises?.length > 0 && (
-        <div className="border-t border-gray-100">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-xs font-medium text-gray-500 border-b border-gray-100">
-                <th className="text-left px-5 py-2.5">Exercise</th>
-                <th className="text-center px-3 py-2.5">Sets</th>
-                <th className="text-center px-3 py-2.5">Reps</th>
-                <th className="text-center px-3 py-2.5">Weight</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {log.exercises.map((ex) => (
-                <tr key={ex.id}>
-                  <td className="px-5 py-3 font-medium text-gray-900">{ex.exercise_name}</td>
-                  <td className="text-center px-3 py-3 text-gray-700">{ex.sets}</td>
-                  <td className="text-center px-3 py-3 text-gray-700">{ex.reps}</td>
-                  <td className="text-center px-3 py-3 text-gray-700">
-                    {ex.weight_lbs ? `${ex.weight_lbs} lbs` : '—'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {expanded && (
+        <>
+          {log.exercises?.length > 0 && (
+            <div className="border-t border-gray-100">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-xs font-medium text-gray-500 border-b border-gray-100">
+                    <th className="text-left px-5 py-2.5">Exercise</th>
+                    <th className="text-center px-3 py-2.5">Sets</th>
+                    <th className="text-center px-3 py-2.5">Reps</th>
+                    <th className="text-center px-3 py-2.5">Weight</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {log.exercises.map((ex) => (
+                    <tr key={ex.id}>
+                      <td className="px-5 py-3 font-medium text-gray-900">{ex.exercise_name}</td>
+                      <td className="text-center px-3 py-3 text-gray-700">{ex.sets}</td>
+                      <td className="text-center px-3 py-3 text-gray-700">{ex.reps}</td>
+                      <td className="text-center px-3 py-3 text-gray-700">
+                        {ex.weight_lbs ? `${ex.weight_lbs} lbs` : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div className="border-t border-gray-100 px-5 py-4 flex flex-col gap-3">
+            {comments.length > 0 && (
+              <ul className="flex flex-col gap-3">
+                {comments.map((c) => (
+                  <li key={c.id} className="flex items-start justify-between gap-2">
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-xs font-semibold text-gray-800">@{c.user.username}</span>
+                        <span className="text-xs text-gray-400">{formatDateTime(c.created_at)}</span>
+                      </div>
+                      <p className="text-sm text-gray-700">{c.body}</p>
+                    </div>
+                    {c.user.username === currentUsername && (
+                      <button
+                        onClick={() => handleDeleteComment(c.id)}
+                        className="text-gray-300 hover:text-red-400 transition-colors text-lg leading-none shrink-0 mt-0.5"
+                        aria-label="Delete comment"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <form onSubmit={handleCommentSubmit} className="flex gap-2">
+              <input
+                ref={commentInputRef}
+                type="text"
+                value={commentBody}
+                onChange={(e) => setCommentBody(e.target.value)}
+                placeholder="Leave a comment…"
+                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+              />
+              <button
+                type="submit"
+                disabled={!commentBody.trim() || submittingComment}
+                className="rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Post
+              </button>
+            </form>
+          </div>
+        </>
       )}
     </li>
   )
 }
 
 export default function Community() {
+  const { user } = useAuth()
   const [logs, setLogs] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
@@ -209,6 +289,7 @@ export default function Community() {
               key={log.id}
               log={log}
               onToggleLike={handleToggleLike}
+              currentUsername={user?.username}
             />
           ))}
         </ul>
